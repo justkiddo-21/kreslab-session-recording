@@ -1,10 +1,10 @@
 {
-  "name": "session-recording",
-  "description": "Module for Cockpit which provides session recording configuration and playback",
+  "name": "kreslab-session-recording",
+  "description": "KResLab fork of Cockpit's session-recording module, patched to browse tlog recordings shipped to a centralized systemd-journal-remote log server",
   "type": "module",
   "main": "index.js",
-  "repository": "git@github.com:Scribery/cockpit-session-recording.git",
-  "author": "",
+  "repository": "git@github.com:justkiddo-21/kreslab-session-recording.git",
+  "author": "KResLab",
   "license": "LGPL-2.1",
   "engines": {
     "node": ">= 16"

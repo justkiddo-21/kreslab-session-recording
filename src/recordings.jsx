@@ -254,6 +254,7 @@ class Logs extends React.Component {
                 count: "all",
                 merge: true,
                 utc: true,
+                directory: "/var/log/journal/remote",
             };
 
             if (this.state.after != null) {
@@ -699,7 +700,7 @@ export default class View extends React.Component {
             matches.push("_HOSTNAME=" + this.state.hostname);
         }
 
-        const options = { follow: false, count: "all", merge: true };
+        const options = { follow: false, count: "all", merge: true, directory: "/var/log/journal/remote" };
 
         if (this.state.date_since && this.state.date_since !== "") {
             options.since = formatUTC(this.state.date_since);
