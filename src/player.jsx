@@ -1274,12 +1274,23 @@ export class Player extends React.Component {
             left: this.state.term_left_style,
         };
 
+        /* KResLab: the terminal element always keeps its own recorded
+         * character-grid aspect ratio and gets centered via transform, but
+         * this wrapper had no explicit width, so it stretched to its parent's
+         * full (page) width regardless -- leaving a big empty margin on both
+         * sides of the terminal instead of hugging it. Size the wrapper to
+         * the actual scaled terminal width so there's no dead space. */
+        const termScaledWidth = (this.term && this.term.element)
+            ? this.term.element.offsetWidth * this.state.scale
+            : null;
         const scrollwrap = {
             minWidth: "630px",
+            width: termScaledWidth ? Math.max(termScaledWidth, 630) + "px" : "630px",
             height: this.containerHeight + "px",
             backgroundColor: "#f5f5f5",
             overflow: this.state.term_scroll,
             position: "relative",
+            margin: "0 auto",
         };
 
         const timeStr = formatDuration(this.state.curTS) +
