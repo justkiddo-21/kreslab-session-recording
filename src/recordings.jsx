@@ -474,7 +474,7 @@ class RecordingList extends React.Component {
 
         const columnTitles = [
             { title: _("User"), sortable: true },
-            ...(this.props.diff_hosts ? [{ title: _("Host"), sortable: true }] : []),
+            { title: _("Host"), sortable: true },
             { title: _("Start"), sortable: true },
             { title: _("End"), sortable: true },
             { title: _("Duration") },
@@ -488,7 +488,10 @@ class RecordingList extends React.Component {
                             title: <Button variant="link" isInline onClick={() => cockpit.location.go([rec.id])}>{rec.user}</Button>,
                             sortKey: rec.user,
                         },
-                        ...(this.props.diff_hosts ? [{ title: rec.hostname, sortKey: rec.hostname }] : []),
+                        {
+                            title: rec.hostname,
+                            sortKey: rec.hostname,
+                        },
                         {
                             title: formatDateTime(rec.start),
                             sortKey: formatDateTime(rec.start),
@@ -552,10 +555,6 @@ export default class View extends React.Component {
         this.journalctlRecordingID = null;
         /* Recording ID -> data map */
         this.recordingMap = {};
-        /* All distinct _HOSTNAME values seen across every ingest batch so far
-         * (KResLab: tracked across the whole session, not just the current
-         * batch -- see journalctlIngest) */
-        this.seenHosts = new Set();
         const path = cockpit.location.path[0];
         this.state = {
             /* List of recordings in start order */
@@ -570,7 +569,6 @@ export default class View extends React.Component {
             search: cockpit.location.options.search || "",
             /* filter values end */
             error_tlog_user: false,
-            diff_hosts: false,
             /* if config is open */
             config: path === "config",
         };
@@ -628,13 +626,6 @@ export default class View extends React.Component {
             /* If no recording found */
             if (r === undefined) {
                 /* Create new recording */
-                if (e._HOSTNAME) {
-                    this.seenHosts.add(e._HOSTNAME);
-                    if (this.seenHosts.size > 1 && this.state.diff_hosts !== true) {
-                        this.setState({ diff_hosts: true });
-                    }
-                }
-
                 r = {
                     id,
                     matchList:     ["TLOG_REC=" + id],
@@ -886,7 +877,6 @@ export default class View extends React.Component {
                             />
                         </ToolbarItem>
                     </ToolbarGroup>
-                    {this.state.diff_hosts === true &&
                     <ToolbarGroup>
                         <ToolbarItem variant="label">{_("Hostname")}</ToolbarItem>
                         <ToolbarItem>
@@ -898,7 +888,7 @@ export default class View extends React.Component {
                                 onChange={(_event, value) => this.handleInputChange("hostname", value)}
                             />
                         </ToolbarItem>
-                    </ToolbarGroup>}
+                    </ToolbarGroup>
                     <ToolbarItem>
                         <Button icon={<CogIcon />} id="btn-config" onClick={this.handleOpenConfig}>
                         </Button>
@@ -916,7 +906,6 @@ export default class View extends React.Component {
                             username={this.state.username}
                             hostname={this.state.hostname}
                             list={this.state.recordingList}
-                            diff_hosts={this.state.diff_hosts}
                         />
                     </PageSection>
                 </Page>

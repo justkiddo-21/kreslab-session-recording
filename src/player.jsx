@@ -534,6 +534,13 @@ const PacketBuffer = class {
         const id = this.getValidField(message, "id", number);
         if (id <= this.id) {
             this.reportError("out of order \"id\" field value: " + id);
+            /* KResLab: a couple of messages get redelivered at the boundary
+             * between the initial batch load and the "follow" run when
+             * reading via --directory (multi-file merge). Upstream reported
+             * this but still went on to reprocess the stale message anyway,
+             * which could double up characters in playback and regress
+             * this.id/this.pos backwards. Skip it instead. */
+            return;
         }
 
         /* Extract message time position */
