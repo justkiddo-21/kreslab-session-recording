@@ -226,7 +226,7 @@ const PacketBuffer = class {
         /* The journalctl reading the recording */
         this.journalctl = journal.journalctl(
             this.matchList,
-            { count: "all", follow: false, merge: true });
+            { count: "all", follow: false, merge: true, directory: "/var/log/journal/remote" });
         this.journalctl
                 .stream(this.handleStream)
                 .then(this.handleDone)
@@ -611,7 +611,7 @@ const PacketBuffer = class {
         this.journalctl = journal.journalctl(
             this.matchList,
             {
-                cursor: this.cursor, follow: true, merge: true, count: "all"
+                cursor: this.cursor, follow: true, merge: true, count: "all", directory: "/var/log/journal/remote"
             });
         this.journalctl.stream(this.handleStream);
         this.journalctl.catch(this.handleError);
@@ -649,7 +649,7 @@ class Search extends React.Component {
     handleSearchSubmit() {
         this.journalctl = journal.journalctl(
             this.props.matchList,
-            { count: "all", follow: false, merge: true, grep: this.state.search });
+            { count: "all", follow: false, merge: true, grep: this.state.search, directory: "/var/log/journal/remote" });
         this.journalctl.stream(this.handleStream);
         this.journalctl.catch(this.handleError);
     }

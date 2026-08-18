@@ -474,6 +474,7 @@ class RecordingList extends React.Component {
 
         const columnTitles = [
             { title: _("User"), sortable: true },
+            ...(this.props.diff_hosts ? [{ title: _("Host"), sortable: true }] : []),
             { title: _("Start"), sortable: true },
             { title: _("End"), sortable: true },
             { title: _("Duration") },
@@ -487,6 +488,7 @@ class RecordingList extends React.Component {
                             title: <Button variant="link" isInline onClick={() => cockpit.location.go([rec.id])}>{rec.user}</Button>,
                             sortKey: rec.user,
                         },
+                        ...(this.props.diff_hosts ? [{ title: rec.hostname, sortKey: rec.hostname }] : []),
                         {
                             title: formatDateTime(rec.start),
                             sortKey: formatDateTime(rec.start),
@@ -550,6 +552,10 @@ export default class View extends React.Component {
         this.journalctlRecordingID = null;
         /* Recording ID -> data map */
         this.recordingMap = {};
+        /* All distinct _HOSTNAME values seen across every ingest batch so far
+         * (KResLab: tracked across the whole session, not just the current
+         * batch -- see journalctlIngest) */
+        this.seenHosts = new Set();
         const path = cockpit.location.path[0];
         this.state = {
             /* List of recordings in start order */
@@ -604,13 +610,6 @@ export default class View extends React.Component {
         const recordingList = this.state.recordingList.slice();
         let i;
         let j;
-        let hostname;
-
-        if (entryList[0]) {
-            if (entryList[0]._HOSTNAME) {
-                hostname = entryList[0]._HOSTNAME;
-            }
-        }
 
         for (i = 0; i < entryList.length; i++) {
             const e = entryList[i];
@@ -629,8 +628,11 @@ export default class View extends React.Component {
             /* If no recording found */
             if (r === undefined) {
                 /* Create new recording */
-                if (hostname !== e._HOSTNAME) {
-                    this.setState({ diff_hosts: true });
+                if (e._HOSTNAME) {
+                    this.seenHosts.add(e._HOSTNAME);
+                    if (this.seenHosts.size > 1 && this.state.diff_hosts !== true) {
+                        this.setState({ diff_hosts: true });
+                    }
                 }
 
                 r = {
