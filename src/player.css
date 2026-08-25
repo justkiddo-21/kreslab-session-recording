@@ -6,6 +6,18 @@
     overflow: hidden;
 }
 
+.player-fullscreen-wrap:fullscreen {
+    background-color: #212427;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: auto;
+}
+
+.player-fullscreen-wrap:fullscreen .panel-heading {
+    color: #fff;
+}
+
 .player-wrap .panel-body, .player-wrap .console-ct > .terminal {
     padding: 0;
 }

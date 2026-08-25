@@ -44,6 +44,8 @@ import {
 import {
     ArrowRightIcon,
     ExpandIcon,
+    ExpandArrowsAltIcon,
+    CompressArrowsAltIcon,
     PauseIcon,
     PlayIcon,
     RedoIcon,
@@ -761,6 +763,8 @@ export class Player extends React.Component {
         this.handleZoomIn = this.handleZoomIn.bind(this);
         this.handleZoomOut = this.handleZoomOut.bind(this);
         this.handleFitTo = this.handleFitTo.bind(this);
+        this.handleFullscreenToggle = this.handleFullscreenToggle.bind(this);
+        this.handleFullscreenChange = this.handleFullscreenChange.bind(this);
         this.handleDragPan = this.handleDragPan.bind(this);
         this.dragPanEnable = this.dragPanEnable.bind(this);
         this.dragPanDisable = this.dragPanDisable.bind(this);
@@ -809,6 +813,7 @@ export class Player extends React.Component {
             mark:           0,
             infoEnabled:    false,
             curTS:          0,
+            fullscreen:     false,
         };
 
         this.containerHeight = 400;
@@ -1106,6 +1111,7 @@ export class Player extends React.Component {
             "=": this.handleZoomIn,
             "-": this.handleZoomOut,
             Z: this.fitIn,
+            F: this.handleFullscreenToggle,
         };
         if (event.target.nodeName.toLowerCase() !== 'input') {
             if (keyCodesFuncs[event.key]) {
@@ -1205,12 +1211,38 @@ export class Player extends React.Component {
         this._transform();
     }
 
+    /* Toggle the browser's native fullscreen mode on the player panel. The
+     * actual resize (bigger terminal, refit) happens in
+     * handleFullscreenChange once the browser confirms the transition, since
+     * requestFullscreen()/exitFullscreen() are async and the wrapper's real
+     * on-screen size isn't known until the fullscreenchange event fires. */
+    handleFullscreenToggle() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else if (this.wrapperRef.current && this.wrapperRef.current.requestFullscreen) {
+            this.wrapperRef.current.requestFullscreen();
+        }
+    }
+
+    handleFullscreenChange() {
+        const isFullscreen = document.fullscreenElement === this.wrapperRef.current;
+        // Leave ~80px headroom for the toolbar/progress bar so they stay
+        // visible alongside the terminal instead of getting clipped.
+        this.containerHeight = isFullscreen ? window.innerHeight - 80 : 400;
+        this.setState({
+            fullscreen: isFullscreen,
+            containerWidth: isFullscreen ? window.innerWidth : this.wrapperRef.current.offsetWidth,
+        });
+        this.handleFitTo();
+    }
+
     componentDidMount() {
         this.term.onData((data) => {
             this.handleTitleChange();
         });
 
         window.addEventListener("keydown", this.handleKeyDown, false);
+        document.addEventListener("fullscreenchange", this.handleFullscreenChange, false);
 
         if (this.wrapperRef.offsetWidth) {
             this.setState({ containerWidth: this.wrapperRef.offsetWidth });
@@ -1415,6 +1447,15 @@ export class Player extends React.Component {
                     disabled={this.state.term_zoom_min}
                      />
                 </ToolbarItem>
+                <ToolbarItem>
+                    <Button icon={this.state.fullscreen ? <CompressArrowsAltIcon /> : <ExpandArrowsAltIcon />}
+                    variant="plain"
+                    id="player-fullscreen"
+                    title="Toggle Fullscreen - Hotkey: Shift-F"
+                    type="button"
+                    onClick={this.handleFullscreenToggle}
+                     />
+                </ToolbarItem>
             </ToolbarGroup>
         );
 
@@ -1480,7 +1521,7 @@ export class Player extends React.Component {
         // ensure react never reuses this div by keying it with the terminal widget
         return (
             <>
-                <div ref={this.wrapperRef} className="panel panel-default">
+                <div ref={this.wrapperRef} className="panel panel-default player-fullscreen-wrap">
                     <div className="panel-heading">
                         <span>{this.state.title}</span>
                     </div>
@@ -1511,6 +1552,7 @@ export class Player extends React.Component {
     componentWillUnmount() {
         this.buf.stop();
         window.removeEventListener("keydown", this.handleKeyDown, false);
+        document.removeEventListener("fullscreenchange", this.handleFullscreenChange, false);
         this.term.dispose();
     }
 }

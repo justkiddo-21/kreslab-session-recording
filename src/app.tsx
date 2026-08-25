@@ -17,23 +17,11 @@
  * along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import View from "./recordings.jsx";
 
-import cockpit from 'cockpit';
-
-const _ = cockpit.gettext;
-
 export const Application = () => {
-    const [hostname, setHostname] = useState(_("Unknown"));
-
-    useEffect(() => {
-        const hostname = cockpit.file('/etc/hostname');
-        hostname.watch(content => setHostname(content?.trim() ?? ""));
-        return hostname.close;
-    }, []);
-
     return (
         <View />
     );
-}
+};
